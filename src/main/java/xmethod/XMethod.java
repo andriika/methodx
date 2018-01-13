@@ -8,6 +8,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -27,20 +28,22 @@ public @interface XMethod {
         private final Method method;
         private final Object object;
         private final String[] argNames;
-        private final ObjectMapper omap;
+        private final ObjectMapper mapper;
 
-        private Item(Method method, Object object, ObjectMapper omap) {
+        private Item(Method method, Object object, ObjectMapper mapper) {
             this.method = method;
             this.object = object;
             this.argNames = method.getAnnotation(XMethod.class).args();
-            this.omap = omap;
+            this.mapper = mapper;
         }
 
-        public Object invoke(Request req) throws InvocationTargetException, IllegalAccessException, IOException {
-            return method.invoke(object, toArgs(req));
+        public Object invoke(Object[] args) throws InvocationTargetException, IllegalAccessException {
+            return method.invoke(object, args);
         }
 
-        private Object[] toArgs(Request req) throws IOException {
+        public Object[] parseArguments(Request req) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+
+            Class<?>[] argTypes = method.getParameterTypes();
 
             Map<String, String[]> parameterMap = null;
 
@@ -49,30 +52,35 @@ public @interface XMethod {
                 String argName = argNames[i];
                 switch (argName) {
                     case "@body":
-                        args[i] = omap.readValue(req.getReader(), method.getParameterTypes()[i]);
+                        args[i] = mapper.readValue(req.getReader(), method.getParameterTypes()[i]);
                         break;
                     default:
                         if (parameterMap == null) {
                             parameterMap = req.getParameterMap();
                         }
-                        args[i] = parameterMap.get(argName)[0];
+                        if (argTypes[i] == String.class) {
+                            args[i] = parameterMap.get(argName)[0];
+                        }
+                        else {
+                            Constructor<?> constructor = argTypes[i].getDeclaredConstructor(String.class);
+                            args[i] = constructor.newInstance(parameterMap.get(argName)[0]);
+                        }
                         break;
                 }
             }
             return args;
         }
 
-        public static Map<String, XMethod.Item> collect(Collection<?> source, ObjectMapper omap) {
+        public static Map<String, XMethod.Item> collect(Collection<?> source, ObjectMapper mapper) {
             Map<String, Item> map = new HashMap<>();
             for (Object bean : source) {
                 for (Method method : bean.getClass().getDeclaredMethods()) {
                     if (null != method.getAnnotation(XMethod.class)) {
-                        Item _new = new Item(method, bean, omap);
+                        Item _new = new Item(method, bean, mapper);
                         String id = method.getDeclaringClass().getSimpleName() + "." + method.getName();
                         Item old = map.put(id, _new);
                         if (null != old) {
-                            throw new RuntimeException(format(
-                                    "exposed method duplicate: old=%s; new=%s", old, _new));
+                            throw new RuntimeException(format("method duplicate: old=%s; new=%s", old, _new));
                         }
                     }
                 }

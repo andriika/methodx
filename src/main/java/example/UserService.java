@@ -10,8 +10,7 @@ public class UserService {
     private final ConcurrentHashMap<Integer, User> users = new ConcurrentHashMap<>();
 
     @XMethod(args = {"id"})
-    public User getById(String _id) {
-        Integer id = Integer.valueOf(_id);
+    public User getById(Integer id) {
         return users.get(id);
     }
 

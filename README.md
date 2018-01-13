@@ -3,7 +3,7 @@ public class Service1 {
     ...
 
     @XMethod(args = {"id", "name", "@body"})
-    public Result method1(String id, String name, User user) {
+    public Result method1(Integer id, String name, User user) {
         ...
     }
 }

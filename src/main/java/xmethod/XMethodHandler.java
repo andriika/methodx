@@ -20,11 +20,11 @@ public class XMethodHandler extends AbstractHandler {
 
     private final Map<String, XMethod.Item> methods;
 
-    private final ObjectMapper omap;
+    private final ObjectMapper mapper;
 
-    private XMethodHandler(Map<String, XMethod.Item> methods, ObjectMapper omap) {
+    private XMethodHandler(Map<String, XMethod.Item> methods, ObjectMapper mapper) {
         this.methods = methods;
-        this.omap = omap;
+        this.mapper = mapper;
     }
 
     @Override
@@ -38,22 +38,32 @@ public class XMethodHandler extends AbstractHandler {
         if (method == null) {
             body.error = new RuntimeException("method not found: " + path);
             body.status = 404;
-        } else {
+        }
+        else {
             try {
-                body.data = method.invoke(req);
-                body.status = 200;
-            } catch (Exception e) {
-                if (e instanceof InvocationTargetException) {
-                    e = (Exception) e.getCause();
+                Object[] args = method.parseArguments(req);
+                try {
+                    body.data = method.invoke(args);
+                    body.status = 200;
                 }
+                catch (Exception e) {
+                    if (e instanceof InvocationTargetException) {
+                        e = (Exception) e.getCause();
+                    }
+                    body.error = e;
+                    body.status = 500;
+                    log.error("failed to process [{}] method", path, e);
+                }
+            }
+            catch (Exception e) {
                 body.error = e;
                 body.status = 500;
-                log.error("failed to process [{}] method", path, e);
+                log.error("failed to parse method arguments", path, e);
             }
         }
         res.setContentType("application/json;charset=utf-8");
         res.setStatus(body.status);
-        res.getWriter().print(omap.writeValueAsString(body));
+        res.getWriter().print(mapper.writeValueAsString(body));
         req.setHandled(true);
     }
 
@@ -67,21 +77,21 @@ public class XMethodHandler extends AbstractHandler {
 
         private ArrayList<Object> beans = new ArrayList<>();
 
-        private ObjectMapper omap = null;
+        private ObjectMapper mapper = null;
 
         public Builder addBean(Object obj) {
             beans.add(obj);
             return this;
         }
 
-        public Builder setObjectMapper(ObjectMapper omap) {
-            this.omap = omap;
+        public Builder setObjectMapper(ObjectMapper mapper) {
+            this.mapper = mapper;
             return this;
         }
 
         public XMethodHandler build() {
-            Map<String, XMethod.Item> methods = XMethod.Item.collect(beans, omap);
-            return new XMethodHandler(methods, omap);
+            Map<String, XMethod.Item> methods = XMethod.Item.collect(beans, mapper);
+            return new XMethodHandler(methods, mapper);
         }
     }
 }
