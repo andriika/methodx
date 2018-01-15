@@ -1,4 +1,4 @@
-package xmethod;
+package methodx;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.server.Request;
@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ import static java.lang.String.format;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface XMethod {
+public @interface Methodx {
 
     String[] args();
 
@@ -33,7 +32,7 @@ public @interface XMethod {
         private Item(Method method, Object object, ObjectMapper mapper) {
             this.method = method;
             this.object = object;
-            this.argNames = method.getAnnotation(XMethod.class).args();
+            this.argNames = method.getAnnotation(Methodx.class).args();
             this.mapper = mapper;
         }
 
@@ -71,12 +70,12 @@ public @interface XMethod {
             return args;
         }
 
-        static Map<String, XMethod.Item> collect(Map<String, ?> source, ObjectMapper mapper) {
+        static Map<String, Methodx.Item> collect(Map<String, ?> source, ObjectMapper mapper) {
             Map<String, Item> map = new HashMap<>();
             for (Map.Entry<String, ?> entry : source.entrySet()) {
                 Object bean = entry.getValue();
                 for (Method method : bean.getClass().getDeclaredMethods()) {
-                    if (null != method.getAnnotation(XMethod.class)) {
+                    if (null != method.getAnnotation(Methodx.class)) {
                         Item _new = new Item(method, bean, mapper);
                         String id = entry.getKey() + "." + method.getName();
                         Item old = map.put(id, _new);

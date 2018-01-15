@@ -1,4 +1,4 @@
-package xmethod;
+package methodx;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,15 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class XMethodHandler extends AbstractHandler {
+public class MethodxHandler extends AbstractHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(XMethodHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodxHandler.class);
 
-    private final Map<String, XMethod.Item> methods;
+    private final Map<String, Methodx.Item> methods;
 
     private final ObjectMapper mapper;
 
-    private XMethodHandler(Map<String, XMethod.Item> methods, ObjectMapper mapper) {
+    private MethodxHandler(Map<String, Methodx.Item> methods, ObjectMapper mapper) {
         this.methods = methods;
         this.mapper = mapper;
     }
@@ -35,7 +35,7 @@ public class XMethodHandler extends AbstractHandler {
         String sign = getMethodSignature(path);
 
         Message body = new Message();
-        XMethod.Item method = methods.get(sign);
+        Methodx.Item method = methods.get(sign);
 
         if (sign.equals("")) {
             body.status = 200;
@@ -101,9 +101,9 @@ public class XMethodHandler extends AbstractHandler {
             return this;
         }
 
-        public XMethodHandler build() {
-            Map<String, XMethod.Item> methods = XMethod.Item.collect(beans, mapper);
-            return new XMethodHandler(methods, mapper);
+        public MethodxHandler build() {
+            Map<String, Methodx.Item> methods = Methodx.Item.collect(beans, mapper);
+            return new MethodxHandler(methods, mapper);
         }
     }
 }

@@ -1,6 +1,6 @@
 package example;
 
-import xmethod.XMethodHandler;
+import methodx.MethodxHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.server.Server;
 
@@ -11,7 +11,7 @@ public class Main {
         UserService userService = new UserService();
 
         Server server = new Server(8080);
-        server.setHandler(new XMethodHandler.Builder()
+        server.setHandler(new MethodxHandler.Builder()
                 .addBean("userService", userService)
                 .setObjectMapper(new ObjectMapper())
                 .build());
