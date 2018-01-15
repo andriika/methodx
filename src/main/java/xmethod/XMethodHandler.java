@@ -11,8 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class XMethodHandler extends AbstractHandler {
 
@@ -30,13 +32,19 @@ public class XMethodHandler extends AbstractHandler {
     @Override
     public void handle(String path, Request req, HttpServletRequest httpReq, HttpServletResponse res) throws IOException {
 
-        path = path.substring(1, path.length());
+        String sign = getMethodSignature(path);
 
         Message body = new Message();
+        XMethod.Item method = methods.get(sign);
 
-        XMethod.Item method = methods.get(path);
-        if (method == null) {
-            body.error = new RuntimeException("method not found: " + path);
+        if (sign.equals("")) {
+            body.status = 200;
+            body.data = methods.entrySet().stream()
+                    .map(e -> e.getKey() + " " + Arrays.toString(e.getValue().getArgNames()))
+                    .collect(Collectors.toList());
+        }
+        else if (method == null) {
+            body.error = new RuntimeException("method not found: " + sign);
             body.status = 404;
         }
         else {
@@ -52,19 +60,23 @@ public class XMethodHandler extends AbstractHandler {
                     }
                     body.error = e;
                     body.status = 500;
-                    log.error("failed to process [{}] method", path, e);
+                    log.error("failed to process [{}] method", sign, e);
                 }
             }
             catch (Exception e) {
                 body.error = e;
                 body.status = 500;
-                log.error("failed to parse method arguments", path, e);
+                log.error("failed to parse method arguments", sign, e);
             }
         }
         res.setContentType("application/json;charset=utf-8");
         res.setStatus(body.status);
         res.getWriter().print(mapper.writeValueAsString(body));
         req.setHandled(true);
+    }
+
+    private String getMethodSignature(String path) {
+        return path.substring(1, path.length());
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -75,12 +87,12 @@ public class XMethodHandler extends AbstractHandler {
 
     public static class Builder {
 
-        private ArrayList<Object> beans = new ArrayList<>();
+        private Map<String, Object> beans = new HashMap<>();
 
         private ObjectMapper mapper = null;
 
-        public Builder addBean(Object obj) {
-            beans.add(obj);
+        public Builder addBean(String id, Object obj) {
+            beans.put(id, obj);
             return this;
         }
 

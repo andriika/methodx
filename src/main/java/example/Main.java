@@ -12,7 +12,7 @@ public class Main {
 
         Server server = new Server(8080);
         server.setHandler(new XMethodHandler.Builder()
-                .addBean(userService)
+                .addBean("userService", userService)
                 .setObjectMapper(new ObjectMapper())
                 .build());
         server.start();

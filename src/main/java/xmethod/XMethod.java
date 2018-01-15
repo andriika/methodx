@@ -37,11 +37,11 @@ public @interface XMethod {
             this.mapper = mapper;
         }
 
-        public Object invoke(Object[] args) throws InvocationTargetException, IllegalAccessException {
+        Object invoke(Object[] args) throws InvocationTargetException, IllegalAccessException {
             return method.invoke(object, args);
         }
 
-        public Object[] parseArguments(Request req) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Object[] parseArguments(Request req) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
             Class<?>[] argTypes = method.getParameterTypes();
 
@@ -71,13 +71,14 @@ public @interface XMethod {
             return args;
         }
 
-        public static Map<String, XMethod.Item> collect(Collection<?> source, ObjectMapper mapper) {
+        static Map<String, XMethod.Item> collect(Map<String, ?> source, ObjectMapper mapper) {
             Map<String, Item> map = new HashMap<>();
-            for (Object bean : source) {
+            for (Map.Entry<String, ?> entry : source.entrySet()) {
+                Object bean = entry.getValue();
                 for (Method method : bean.getClass().getDeclaredMethods()) {
                     if (null != method.getAnnotation(XMethod.class)) {
                         Item _new = new Item(method, bean, mapper);
-                        String id = method.getDeclaringClass().getSimpleName() + "." + method.getName();
+                        String id = entry.getKey() + "." + method.getName();
                         Item old = map.put(id, _new);
                         if (null != old) {
                             throw new RuntimeException(format("method duplicate: old=%s; new=%s", old, _new));
@@ -86,6 +87,10 @@ public @interface XMethod {
                 }
             }
             return map;
+        }
+
+        String[] getArgNames() {
+            return argNames;
         }
     }
 }
