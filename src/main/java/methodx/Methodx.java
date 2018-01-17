@@ -3,7 +3,6 @@ package methodx;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.server.Request;
 
-import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -40,7 +39,7 @@ public @interface Methodx {
             return method.invoke(object, args);
         }
 
-        Object[] parseArguments(Request req) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Object[] parseArguments(Request req) throws Exceptions.ParseArgumentException {
 
             Class<?>[] argTypes = method.getParameterTypes();
 
@@ -50,21 +49,36 @@ public @interface Methodx {
             for (int i = 0; i < argNames.length; i++) {
                 String argName = argNames[i];
                 switch (argName) {
-                    case "@body":
-                        args[i] = mapper.readValue(req.getReader(), method.getParameterTypes()[i]);
+                    case "@body": {
+                        Class<?> argType = null;
+                        try {
+                            argType = method.getParameterTypes()[i];
+                            args[i] = mapper.readValue(req.getReader(), method.getParameterTypes()[i]);
+                        }
+                        catch (Exception e) {
+                            throw new Exceptions.ParseArgumentException(argName, argType, "[see request body]", e);
+                        }
                         break;
-                    default:
+                    }
+                    default: {
                         if (parameterMap == null) {
                             parameterMap = req.getParameterMap();
                         }
+                        Class<?> argType = argTypes[i];
+                        String value = parameterMap.get(argName)[0];
                         if (argTypes[i] == String.class) {
-                            args[i] = parameterMap.get(argName)[0];
+                            args[i] = value;
                         }
                         else {
-                            Constructor<?> constructor = argTypes[i].getDeclaredConstructor(String.class);
-                            args[i] = constructor.newInstance(parameterMap.get(argName)[0]);
+                            try {
+                                Constructor<?> constructor = argTypes[i].getDeclaredConstructor(String.class);
+                                args[i] = constructor.newInstance(value);
+                            }
+                            catch (Exception e) {
+                                throw new Exceptions.ParseArgumentException(argName, argType, value, e);
+                            }
                         }
-                        break;
+                    }
                 }
             }
             return args;

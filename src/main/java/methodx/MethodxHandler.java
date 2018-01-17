@@ -64,9 +64,14 @@ public class MethodxHandler extends AbstractHandler {
                 }
             }
             catch (Exception e) {
-                body.error = e;
+                if (e instanceof Exceptions.ParseArgumentException) {
+                    body.error = e.getMessage();
+                }
+                else {
+                    body.error = e;
+                }
                 body.status = 500;
-                log.error("failed to parse method arguments", sign, e);
+                log.error("failed to parse [{}] method arguments", sign, e);
             }
         }
         res.setContentType("application/json;charset=utf-8");
