@@ -23,7 +23,7 @@
     </developers>
     <scm>
         <connection>scm:git:git://github.com/mainclass/methodx.git</connection>
-        <developerConnection>scm:git:ssh://github.com:mainclass/methodx.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:mainclass/methodx.git</developerConnection>
         <url>http://github.com/mainclass/methodx/tree/master</url>
     </scm>
     <distributionManagement>
@@ -40,6 +40,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
