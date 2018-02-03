@@ -5,6 +5,10 @@
     <groupId>net.mainclass</groupId>
     <artifactId>methodx</artifactId>
     <version>1.1-SNAPSHOT</version>
+    <name>MethodX</name>
+    <description>Method eXposure (MethodX) is a way of providing interoperability between computer systems on the
+        Internet
+    </description>
 
     <url>http://github.com/mainclass/methodx</url>
     <licenses>
