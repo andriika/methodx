@@ -44,7 +44,7 @@ public class MethodxHandler extends AbstractHandler {
                     .collect(Collectors.toList());
         }
         else if (method == null) {
-            body.error = new RuntimeException("method not found: " + sign);
+            body.error = "method not found: " + sign;
             body.status = 404;
         }
         else {

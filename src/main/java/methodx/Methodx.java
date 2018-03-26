@@ -50,9 +50,8 @@ public @interface Methodx {
                 String argName = argNames[i];
                 switch (argName) {
                     case "@body": {
-                        Class<?> argType = null;
+                        Class<?> argType = method.getParameterTypes()[i];
                         try {
-                            argType = method.getParameterTypes()[i];
                             args[i] = mapper.readValue(req.getReader(), method.getParameterTypes()[i]);
                         }
                         catch (Exception e) {
